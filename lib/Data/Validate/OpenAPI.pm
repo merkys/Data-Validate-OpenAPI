@@ -44,7 +44,6 @@ sub validate
     for my $description (@parameters) {
         my $name = $description->{name};
         my $schema = $description->{schema} if $description->{schema};
-        my $format = $schema->{format} if $schema;
         if( !exists $par_hash->{$name} ) {
             if( $schema && exists $schema->{default} ) {
                 $par->{$name} = $schema->{default};
@@ -52,58 +51,66 @@ sub validate
             next;
         }
 
-        my $value = $par_hash->{$name};
-
-        # FIXME: Maybe employ a proper JSON Schema validator? Not sure
-        # if it untaints, though.
-        if( !defined $format ) {
-            # nothing to do here
-        } elsif( $format eq 'date-time' ) {
-            my $parser = DateTime::Format::RFC3339->new;
-            $value = $parser->format_datetime( $parser->parse_datetime( $value ) );
-        } elsif( $format eq 'email' ) {
-            $value = is_email $value;
-        } elsif( $format eq 'integer' ) {
-            $value = is_integer $value;
-        } elsif( $format eq 'ipv4' ) {
-            $value = is_ipv4 $value;
-        } elsif( $format eq 'ipv6' ) {
-            $value = is_ipv6 $value;
-        } elsif( $format eq 'uri' ) {
-            $value = is_uri $value;
-        } elsif( $format eq 'uuid' ) {
-            # Regex taken from Data::Validate::UUID. Module is not used as
-            # it does not untaint the value.
-            if( $value =~ /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i ) {
-                $value = $1;
-            } else {
-                undef $value;
-            }
-        }
-
-        next unless defined $value;
-
-        if( $schema && $schema->{enum} ) {
-            ( $value ) = grep { $value eq $_ } @{$schema->{enum}};
-            next unless defined $value;
-        }
-
-        if( $schema && $schema->{pattern} ) {
-            next unless $value =~ /^($schema->{pattern})$/;
-            $value = $1;
-        }
-
-        if( defined $value && $value eq '' &&
-            ( !exists $description->{allowEmptyValue} ||
-              $description->{allowEmptyValue} eq 'false' ) ) {
-            next; # nothing to do
-        }
-
-        next unless defined $value;
-        $par->{$name} = $value;
+        my $value = validate_value( $par_hash->{$name}, $description );
+        $par->{$name} = $value if defined $value;
     }
 
     return $par;
+}
+
+sub validate_value
+{
+    my( $value, $description ) = @_;
+
+    my $schema = $description->{schema} if $description->{schema};
+    my $format = $schema->{format} if $schema;
+
+    # FIXME: Maybe employ a proper JSON Schema validator? Not sure
+    # if it untaints, though.
+    if( !defined $format ) {
+        # nothing to do here
+    } elsif( $format eq 'date-time' ) {
+        my $parser = DateTime::Format::RFC3339->new;
+        $value = $parser->format_datetime( $parser->parse_datetime( $value ) );
+    } elsif( $format eq 'email' ) {
+        $value = is_email $value;
+    } elsif( $format eq 'integer' ) {
+        $value = is_integer $value;
+    } elsif( $format eq 'ipv4' ) {
+        $value = is_ipv4 $value;
+    } elsif( $format eq 'ipv6' ) {
+        $value = is_ipv6 $value;
+    } elsif( $format eq 'uri' ) {
+        $value = is_uri $value;
+    } elsif( $format eq 'uuid' ) {
+        # Regex taken from Data::Validate::UUID. Module is not used as
+        # it does not untaint the value.
+        if( $value =~ /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i ) {
+            $value = $1;
+        } else {
+            return;
+        }
+    }
+
+    return unless defined $value;
+
+    if( $schema && $schema->{enum} ) {
+        ( $value ) = grep { $value eq $_ } @{$schema->{enum}};
+        return unless defined $value;
+    }
+
+    if( $schema && $schema->{pattern} ) {
+        return unless $value =~ /^($schema->{pattern})$/;
+        $value = $1;
+    }
+
+    if( defined $value && $value eq '' &&
+        ( !exists $description->{allowEmptyValue} ||
+          $description->{allowEmptyValue} eq 'false' ) ) {
+        return; # nothing to do
+    }
+
+    return $value;
 }
 
 1;
