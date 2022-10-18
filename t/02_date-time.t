@@ -26,7 +26,8 @@ my $api = Data::Validate::OpenAPI->new( decode_json '
             "name": "date-time",
             "in": "query",
             "schema": {
-              "format": "date-time"
+              "format": "date-time",
+              "type": "string"
             }
           }
         ]

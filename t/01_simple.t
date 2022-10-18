@@ -27,7 +27,8 @@ my $api = Data::Validate::OpenAPI->new( decode_json '
             "in": "query",
             "required": true,
             "schema": {
-              "format": "integer"
+              "format": "integer",
+              "type": "integer"
             }
           }
         ]

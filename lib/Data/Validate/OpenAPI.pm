@@ -40,7 +40,6 @@ sub validate
         $par_hash = $par_hash->Vars; # object is assumed to be CGI
     }
 
-    # FIXME: Some parameters may be multiple-valued.
     for my $description (@parameters) {
         my $name = $description->{name};
         my $schema = $description->{schema} if $description->{schema};
@@ -51,8 +50,17 @@ sub validate
             next;
         }
 
-        my $value = validate_value( $par_hash->{$name}, $description );
-        $par->{$name} = $value if defined $value;
+        if( $schema && $schema->{type} eq 'array' ) {
+            my @values = grep { defined $_ }
+                         map { validate_value( $_, $schema ) }
+                         ref $par_hash->{$name} eq 'ARRAY'
+                            ? @{$par_hash->{$name}}
+                            : split "\0", $par_hash->{$name};
+            $par->{$name} = \@values if @values;
+        } else {
+            my $value = validate_value( $par_hash->{$name}, $schema );
+            $par->{$name} = $value if defined $value;
+        }
     }
 
     return $par;
@@ -60,9 +68,8 @@ sub validate
 
 sub validate_value
 {
-    my( $value, $description ) = @_;
+    my( $value, $schema ) = @_;
 
-    my $schema = $description->{schema} if $description->{schema};
     my $format = $schema->{format} if $schema;
 
     # FIXME: Maybe employ a proper JSON Schema validator? Not sure
@@ -104,11 +111,12 @@ sub validate_value
         $value = $1;
     }
 
-    if( defined $value && $value eq '' &&
-        ( !exists $description->{allowEmptyValue} ||
-          $description->{allowEmptyValue} eq 'false' ) ) {
-        return; # nothing to do
-    }
+    ## Not sure this is appropriate here
+    # if( defined $value && $value eq '' &&
+    #     ( !exists $description->{allowEmptyValue} ||
+    #       $description->{allowEmptyValue} eq 'false' ) ) {
+    #     return; # nothing to do
+    # }
 
     return $value;
 }
