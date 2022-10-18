@@ -3,6 +3,7 @@ package Data::Validate::OpenAPI;
 use strict;
 use warnings;
 
+use OpenAPI::Render;
 use base OpenAPI::Render::;
 
 use Data::Validate qw( is_integer );
@@ -23,8 +24,7 @@ sub validate
         exists $api->{paths}{$path}{$method}{parameters}
            ? @{$api->{paths}{$path}{$method}{parameters}} : (),
         exists $api->{paths}{$path}{$method}{requestBody}
-           ? RequestBody2Parameters( $api->{paths}{$path}{$method}{requestBody} ) : (),
-        );
+           ? RequestBody2Parameters( $api->{paths}{$path}{$method}{requestBody} ) : ();
 
     my $par = {};
     my $par_hash = $input;
@@ -78,7 +78,7 @@ sub validate
         }
 
         if( $schema && $schema->{pattern} ) {
-            next unless $value =~ /^($schema->{pattern})$/ ) {
+            next unless $value =~ /^($schema->{pattern})$/;
             $value = $1;
         }
 
