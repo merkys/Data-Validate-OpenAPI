@@ -3,10 +3,16 @@
 use strict;
 use warnings;
 
+use lib 'lib';
+use lib '../OpenAPI-Render/lib';
+
 use Data::Validate::OpenAPI;
 use JSON;
 use Test::Deep;
-use Test::More tests => 1;
+use Test::More tests => 3;
+use Test::Taint;
+
+taint_checking_ok();
 
 my $api = Data::Validate::OpenAPI->new( decode_json '
 {
@@ -19,7 +25,7 @@ my $api = Data::Validate::OpenAPI->new( decode_json '
             "in": "query",
             "required": true,
             "schema": {
-              "type": "string"
+              "format": "integer"
             }
           }
         ]
@@ -31,5 +37,9 @@ my $api = Data::Validate::OpenAPI->new( decode_json '
 
 my $input = { id => 123 };
 
+taint( values %$input );
+
 my $parameters = $api->validate( '/', 'get', $input );
+
 cmp_deeply( $parameters, $input );
+untainted_ok_deeply( $parameters );
