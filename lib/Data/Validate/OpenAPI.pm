@@ -7,6 +7,7 @@ use base OpenAPI::Render::;
 
 use Data::Validate qw( is_integer );
 use Data::Validate::Email qw( is_email );
+use Data::Validate::IP qw( is_ipv4 is_ipv6 );
 use Data::Validate::URI qw( is_uri );
 
 sub validate
@@ -48,6 +49,10 @@ sub validate
             $value = is_email $value;
         } elsif( $format eq 'integer' ) {
             $value = is_integer $value;
+        } elsif( $format eq 'ipv4' ) {
+            $value = is_ipv4 $value;
+        } elsif( $format eq 'ipv6' ) {
+            $value = is_ipv6 $value;
         } elsif( $format eq 'uri' ) {
             $value = is_uri $value;
         } elsif( $format eq 'uuid' ) {
