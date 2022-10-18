@@ -19,6 +19,9 @@ sub validate
 {
     my( $self, $path, $method, $input ) = @_;
 
+    # FIXME: More specific parameters override less specific ones.
+    # FIXME: Request body parameters should be taken from CGI object
+    #        using their own specific methods.
     my $api = $self->{api};
     my @parameters =
         grep { $_->{in} eq 'query' }
