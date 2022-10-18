@@ -9,10 +9,11 @@ use Data::Validate qw( is_integer );
 use Data::Validate::Email qw( is_email );
 use Data::Validate::IP qw( is_ipv4 is_ipv6 );
 use Data::Validate::URI qw( is_uri );
+use Scalar::Util qw( blessed );
 
 sub validate
 {
-    my( $self, $path, $method, $cgi ) = @_;
+    my( $self, $path, $method, $input ) = @_;
 
     my $api = $self->{api};
     my @parameters =
@@ -26,7 +27,11 @@ sub validate
         );
 
     my $par = {};
-    my $par_hash = $cgi->Vars;
+    my $par_hash = $input;
+
+    if( blessed $par_hash ) {
+        $par_hash = $par_hash->Vars; # object is assumed to be CGI
+    }
 
     for my $description (@parameters) {
         my $name = $description->{name};
