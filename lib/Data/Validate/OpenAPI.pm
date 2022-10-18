@@ -39,6 +39,7 @@ sub validate
         $par_hash = $par_hash->Vars; # object is assumed to be CGI
     }
 
+    # FIXME: Some parameters may be multiple-valued.
     for my $description (@parameters) {
         my $name = $description->{name};
         my $schema = $description->{schema} if $description->{schema};
