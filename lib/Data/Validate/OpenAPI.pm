@@ -86,6 +86,8 @@ sub validate
         next unless defined $value;
         $par->{$name} = $value;
     }
+
+    return $par;
 }
 
 1;
