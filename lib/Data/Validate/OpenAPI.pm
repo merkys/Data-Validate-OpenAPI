@@ -7,6 +7,7 @@ use base OpenAPI::Render::;
 
 use Data::Validate qw( is_integer );
 use Data::Validate::Email qw( is_email );
+use Data::Validate::URI qw( is_uri );
 
 sub validate
 {
@@ -39,26 +40,42 @@ sub validate
 
         my $value = $par_hash->{$name};
 
+        # FIXME: Maybe employ a proper JSON Schema validator? Not sure
+        # if it untaints, though.
         if( !defined $format ) {
             # nothing to do here
         } elsif( $format eq 'email' ) {
             $value = is_email $value;
         } elsif( $format eq 'integer' ) {
             $value = is_integer $value;
-        }
-
-        if( $schema && $schema->{pattern} ) {
-            if( $value =~ /^($schema->{pattern})$/ ) {
+        } elsif( $format eq 'uri' ) {
+            $value = is_uri $value;
+        } elsif( $format eq 'uuid' ) {
+            # Regex taken from Data::Validate::UUID. Module is not used as
+            # it does not untaint the value.
+            if( $value =~ /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i ) {
                 $value = $1;
             } else {
                 undef $value;
             }
         }
 
+        next unless defined $value;
+
+        if( $schema && $schema->{enum} ) {
+            ( $value ) = grep { $value eq $_ } @{$schema->{enum}};
+            next unless defined $value;
+        }
+
+        if( $schema && $schema->{pattern} ) {
+            next unless $value =~ /^($schema->{pattern})$/ ) {
+            $value = $1;
+        }
+
         if( defined $value && $value eq '' &&
             ( !exists $description->{allowEmptyValue} ||
               $description->{allowEmptyValue} eq 'false' ) ) {
-            undef $value;
+            next; # nothing to do
         }
 
         next unless defined $value;
