@@ -3,6 +3,9 @@ package Data::Validate::OpenAPI;
 use strict;
 use warnings;
 
+# ABSTRACT: Validate input parameters via OpenAPI schema
+# VERSION
+
 use OpenAPI::Render;
 use base OpenAPI::Render::;
 
