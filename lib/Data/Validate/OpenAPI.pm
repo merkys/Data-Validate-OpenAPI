@@ -13,6 +13,7 @@ use Data::Validate qw( is_integer );
 use Data::Validate::Email qw( is_email );
 use Data::Validate::IP qw( is_ipv4 is_ipv6 );
 use Data::Validate::URI qw( is_uri );
+use DateTime::Format::RFC3339;
 use Scalar::Util qw( blessed );
 
 sub validate
@@ -57,6 +58,9 @@ sub validate
         # if it untaints, though.
         if( !defined $format ) {
             # nothing to do here
+        } elsif( $format eq 'date-time' ) {
+            my $parser = DateTime::Format::RFC3339->new;
+            $value = $parser->format_datetime( $parser->parse_datetime( $value ) );
         } elsif( $format eq 'email' ) {
             $value = is_email $value;
         } elsif( $format eq 'integer' ) {
