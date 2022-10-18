@@ -30,8 +30,8 @@ sub validate
         my $schema = $description->{schema} if $description->{schema};
         my $format = $schema->{format} if $schema;
         if( !exists $par_hash->{$name} ) {
-            if( exists $description->{default} ) {
-                $par->{$name} = $description->{default};
+            if( $schema && exists $schema->{default} ) {
+                $par->{$name} = $schema->{default};
             }
             next;
         }
