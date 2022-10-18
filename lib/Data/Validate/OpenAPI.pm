@@ -13,7 +13,8 @@ sub validate
     my( $self, $path, $method, $cgi ) = @_;
 
     my $api = $self->{api};
-    my @parameters = (
+    my @parameters =
+        grep { $_->{in} eq 'query' }
         exists $api->{paths}{$path}{parameters}
            ? @{$api->{paths}{$path}{parameters}} : (),
         exists $api->{paths}{$path}{$method}{parameters}
@@ -53,6 +54,15 @@ sub validate
                 undef $value;
             }
         }
+
+        if( defined $value && $value eq '' &&
+            ( !exists $description->{allowEmptyValue} ||
+              $description->{allowEmptyValue} eq 'false' ) ) {
+            undef $value;
+        }
+
+        next unless defined $value;
+        $par->{$name} = $value;
     }
 }
 
