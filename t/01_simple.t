@@ -10,8 +10,9 @@ use Test::More;
 use Test::Taint;
 
 my @valid_ids = ( '0', '123', '0123' );
+my @invalid_ids = ( '', 'a' );
 
-plan tests => 1 + 2 * @valid_ids;
+plan tests => 2 * @valid_ids + @invalid_ids + 1;
 
 taint_checking_ok();
 
@@ -38,11 +39,18 @@ my $api = Data::Validate::OpenAPI->new( decode_json '
 
 for (@valid_ids) {
     my $input = { id => $_ };
-
     taint( values %$input );
 
     my $parameters = $api->validate( '/', 'get', $input );
 
     cmp_deeply( $parameters, { id => int $_ } );
     untainted_ok_deeply( $parameters );
+}
+
+for (@invalid_ids) {
+    my $input = { id => $_ };
+    taint( values %$input );
+
+    my $parameters = $api->validate( '/', 'get', $input );
+    is( scalar keys %$parameters, 0 );
 }
