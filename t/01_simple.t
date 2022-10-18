@@ -1,16 +1,17 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -T
 
 use strict;
 use warnings;
 
-use lib 'lib';
-use lib '../OpenAPI-Render/lib';
-
 use Data::Validate::OpenAPI;
 use JSON;
 use Test::Deep;
-use Test::More tests => 3;
+use Test::More;
 use Test::Taint;
+
+my @valid_ids = ( '0', '123', '0123' );
+
+plan tests => 1 + 2 * @valid_ids;
 
 taint_checking_ok();
 
@@ -35,11 +36,13 @@ my $api = Data::Validate::OpenAPI->new( decode_json '
 }
 ' );
 
-my $input = { id => 123 };
+for (@valid_ids) {
+    my $input = { id => $_ };
 
-taint( values %$input );
+    taint( values %$input );
 
-my $parameters = $api->validate( '/', 'get', $input );
+    my $parameters = $api->validate( '/', 'get', $input );
 
-cmp_deeply( $parameters, $input );
-untainted_ok_deeply( $parameters );
+    cmp_deeply( $parameters, { id => int $_ } );
+    untainted_ok_deeply( $parameters );
+}
