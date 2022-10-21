@@ -7,7 +7,7 @@ use warnings;
 # VERSION
 
 use OpenAPI::Render;
-use base OpenAPI::Render::;
+use parent OpenAPI::Render::;
 
 use Data::Validate qw( is_integer );
 use Data::Validate::Email qw( is_email );
@@ -31,13 +31,13 @@ sub validate
         exists $api->{paths}{$path}{$method}{parameters}
            ? @{$api->{paths}{$path}{$method}{parameters}} : (),
         exists $api->{paths}{$path}{$method}{requestBody}
-           ? RequestBody2Parameters( $api->{paths}{$path}{$method}{requestBody} ) : ();
+           ? OpenAPI::Render::RequestBody2Parameters( $api->{paths}{$path}{$method}{requestBody} ) : ();
 
     my $par = {};
     my $par_hash = $input;
 
     if( blessed $par_hash ) {
-        $par_hash = $par_hash->Vars; # object is assumed to be CGI
+        $par_hash = { $par_hash->Vars }; # object is assumed to be CGI
     }
 
     for my $description (@parameters) {
