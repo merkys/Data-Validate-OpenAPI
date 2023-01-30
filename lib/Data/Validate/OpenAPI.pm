@@ -16,6 +16,36 @@ use Data::Validate::URI qw( is_uri );
 use DateTime::Format::RFC3339;
 use Scalar::Util qw( blessed );
 
+=head1 SYNOPSIS
+
+    use CGI;
+    use Data::Validate::OpenAPI;
+
+    my $validator = Data::Validate::OpenAPI->new( $parsed_openapi_json );
+    my $params = $validator->validate( '/', 'post', CGI->new );
+
+=head1 DESCRIPTION
+
+C<Data::Validate::OpenAPI> validates and untaints CGI parameters using a supplied OpenAPI schema.
+It applies format-specific validation and untainting using appropriate L<Data::Validate> subclasses, including email, IP, URI and other.
+Also it checks values against enumerators and patterns, if provided.
+
+=head1 SUBROUTINES
+
+=method C<new>
+
+Takes a parsed OpenAPI schema as returned by L<JSON> module's C<decode_json()>.
+Returns validator ready to validate CGI parameters.
+
+=method C<validate>
+
+Takes a call path, HTTP method and a CGI object.
+Returns a hash of validated pairs of CGI parameter keys and their values.
+At this point values failing to validate are not reported.
+Keys for parameters having no valid values are omitted from the returned hash.
+
+=cut
+
 sub validate
 {
     my( $self, $path, $method, $input ) = @_;
