@@ -16,6 +16,9 @@ use Data::Validate::URI qw( is_uri );
 use DateTime::Format::RFC3339;
 use Scalar::Util qw( blessed );
 
+# Global variable for reporter subroutine
+our $reporter;
+
 =head1 SYNOPSIS
 
     use CGI;
@@ -81,20 +84,36 @@ sub validate
         }
 
         if( $schema && $schema->{type} eq 'array' ) {
-            my @values = grep { defined $_ }
-                         map { validate_value( $_, $schema ) }
-                         ref $par_hash->{$name} eq 'ARRAY'
-                            ? @{$par_hash->{$name}}
-                            : split "\0", $par_hash->{$name};
-            $par->{$name} = \@values if @values;
+            my( @good_values, @bad_values );
+            for (ref $par_hash->{$name} eq 'ARRAY' ? @{$par_hash->{$name}} : split "\0", $par_hash->{$name}) {
+                my $value = validate_value( $_, $schema );
+                push @good_values, $value if defined $value;
+                push @bad_values, $value unless defined $value;
+            }
+            $par->{$name} = \@good_values if @good_values;
+            $reporter->( $name, @bad_values ) if $reporter && @bad_values;
         } else {
             my $value = validate_value( $par_hash->{$name}, $schema );
             $par->{$name} = $value if defined $value;
+            if( $reporter ) {
+                $reporter->( $name, $par_hash->{$name} );
+            }
         }
     }
 
     return $par;
 }
+
+=head1 VALIDATION ERROR REPORTING
+
+By default validation errors are silent by default.
+However, this can be overridden by setting module variable C<$Data::Validate::OpenAPI::reporter> to a subroutine reference to be called upon validation failure with the following signature:
+
+    $reporter->( $parameter_name, @bad_values );
+
+At this point the module does not indicate which particular check failed during the validation.
+
+=cut
 
 sub validate_value
 {
