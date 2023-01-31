@@ -30,14 +30,14 @@ C<Data::Validate::OpenAPI> validates and untaints CGI parameters using a supplie
 It applies format-specific validation and untainting using appropriate L<Data::Validate> subclasses, including email, IP, URI and other.
 Also it checks values against enumerators and patterns, if provided.
 
-=cut
+=head1 METHODS
 
-=method C<new>
+=head2 C<new>
 
 Takes a parsed OpenAPI schema as returned by L<JSON> module's C<decode_json()>.
 Returns validator ready to validate CGI parameters.
 
-=method C<validate>
+=head2 C<validate>
 
 Takes a call path, HTTP method and a CGI object.
 Returns a hash of validated pairs of CGI parameter keys and their values.
