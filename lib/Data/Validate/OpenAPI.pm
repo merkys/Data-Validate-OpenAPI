@@ -32,9 +32,6 @@ Also it checks values against enumerators and patterns, if provided.
 
 =cut
 
-# Global variable for reporter subroutine
-our $reporter;
-
 =method C<new>
 
 Takes a parsed OpenAPI schema as returned by L<JSON> module's C<decode_json()>.
@@ -104,19 +101,43 @@ sub validate
 
 =head1 VALIDATION ERROR REPORTING
 
-By default validation errors are silent by default.
-However, this can be overridden by setting module variable C<$Data::Validate::OpenAPI::reporter> to a subroutine reference to be called upon validation failure with the following signature:
+By default validation errors are silent, but there are two ways to handle validation errors: by setting validator-specific subroutine or by setting module variable:
+
+    my $reporter = sub { warn "value for '$_[0]' is incorrect" };
+
+    # Set a reporter for this particular validator instance:
+    $validator->reporter( $reporter );
+
+    # Set a reporter for all instances of this class:
+    $Data::Validate::OpenAPI::reporter = $reporter;
+
+If any of them is set, reporter subroutine is called with the following parameters:
 
     $reporter->( $parameter_name, @bad_values );
 
+Validator-specific reporter takes precedence.
 At this point the module does not indicate which particular check failed during the validation.
 
 =cut
 
+# Global variable for reporter subroutine
+our $reporter;
+
+sub reporter
+{
+    my( $self, $reporter_sub ) = @_;
+    $self->{reporter} = $reporter_sub;
+}
+
 sub _report
 {
     my( $self, $name, @values ) = @_;
-    $reporter->( $name, @values ) if $reporter;
+
+    if( $self->{reporter} ) {
+        $self->{reporter}->( $name, @values );
+    } elsif( $reporter ) {
+        $reporter->( $name, @values );
+    }
 }
 
 sub _validate_value
