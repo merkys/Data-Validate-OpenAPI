@@ -170,22 +170,20 @@ sub _validate_value
 
     my $format = $schema->{format} if $schema;
 
+    # 'enum' is the strictest possible validation method.
+    if( $schema && $schema->{enum} ) {
+        return grep { $value eq $_ } @{$schema->{enum}};
+    }
+
+    # 'pattern' is also quite strict.
+    if( $schema && $schema->{pattern} ) {
+        return $value =~ /^($schema->{pattern})$/ ? $1 : undef;
+    }
+
     # FIXME: Maybe employ a proper JSON Schema validator?
     #        Not sure if it untaints, though.
-    if( exists $format_methods{$format} ) {
-        $value = $format_methods{$format}->( $value );
-    }
-
-    return unless defined $value;
-
-    if( $schema && $schema->{enum} ) {
-        ( $value ) = grep { $value eq $_ } @{$schema->{enum}};
-        return unless defined $value;
-    }
-
-    if( $schema && $schema->{pattern} ) {
-        return unless $value =~ /^($schema->{pattern})$/;
-        $value = $1;
+    if( $format && exists $format_methods{$format} ) {
+        return $format_methods{$format}->( $value );
     }
 
     ## Not sure this is appropriate here
@@ -195,6 +193,7 @@ sub _validate_value
     #     return; # nothing to do
     # }
 
+    # Tainted values may still get till here and are returned as such.
     return $value;
 }
 
