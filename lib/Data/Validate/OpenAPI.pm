@@ -91,13 +91,11 @@ sub validate
                 push @bad_values, $value unless defined $value;
             }
             $par->{$name} = \@good_values if @good_values;
-            $reporter->( $name, @bad_values ) if $reporter && @bad_values;
+            $self->_report( $name, @bad_values ) if @bad_values;
         } else {
             my $value = _validate_value( $par_hash->{$name}, $schema );
             $par->{$name} = $value if defined $value;
-            if( $reporter ) {
-                $reporter->( $name, $par_hash->{$name} );
-            }
+            $self->_report( $name, $value ) unless defined $value;
         }
     }
 
@@ -114,6 +112,12 @@ However, this can be overridden by setting module variable C<$Data::Validate::Op
 At this point the module does not indicate which particular check failed during the validation.
 
 =cut
+
+sub _report
+{
+    my( $self, $name, @values ) = @_;
+    $reporter->( $name, @values ) if $reporter;
+}
 
 sub _validate_value
 {
