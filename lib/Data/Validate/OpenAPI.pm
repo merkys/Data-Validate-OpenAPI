@@ -148,37 +148,30 @@ sub _report
     }
 }
 
+my %format_methods = (
+    'date-time' => sub { my $parser = DateTime::Format::RFC3339->new;
+                         return $parser->format_datetime( $parser->parse_datetime( $_[0] ) ) },
+    email       => \&is_email,
+    integer     => \&is_integer,
+    ipv4        => \&is_ipv4,
+    ipv6        => \&is_ipv6,
+    uri         => \&is_uri,
+
+    # Regex is taken from Data::Validate::UUID.
+    # The module itself is not used as it does not untaint the value.
+    uuid        => sub { return $1 if $_[0] =~ /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i },
+);
+
 sub _validate_value
 {
     my( $value, $schema ) = @_;
 
     my $format = $schema->{format} if $schema;
 
-    # FIXME: Maybe employ a proper JSON Schema validator? Not sure
-    # if it untaints, though.
-    if( !defined $format ) {
-        # nothing to do here
-    } elsif( $format eq 'date-time' ) {
-        my $parser = DateTime::Format::RFC3339->new;
-        $value = $parser->format_datetime( $parser->parse_datetime( $value ) );
-    } elsif( $format eq 'email' ) {
-        $value = is_email $value;
-    } elsif( $format eq 'integer' ) {
-        $value = is_integer $value;
-    } elsif( $format eq 'ipv4' ) {
-        $value = is_ipv4 $value;
-    } elsif( $format eq 'ipv6' ) {
-        $value = is_ipv6 $value;
-    } elsif( $format eq 'uri' ) {
-        $value = is_uri $value;
-    } elsif( $format eq 'uuid' ) {
-        # Regex taken from Data::Validate::UUID. Module is not used as
-        # it does not untaint the value.
-        if( $value =~ /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i ) {
-            $value = $1;
-        } else {
-            return;
-        }
+    # FIXME: Maybe employ a proper JSON Schema validator?
+    #        Not sure if it untaints, though.
+    if( exists $format_methods{$format} ) {
+        $value = $format_methods{$format}->( $value );
     }
 
     return unless defined $value;
