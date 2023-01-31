@@ -16,9 +16,6 @@ use Data::Validate::URI qw( is_uri );
 use DateTime::Format::RFC3339;
 use Scalar::Util qw( blessed );
 
-# Global variable for reporter subroutine
-our $reporter;
-
 =head1 SYNOPSIS
 
     use CGI;
@@ -33,7 +30,10 @@ C<Data::Validate::OpenAPI> validates and untaints CGI parameters using a supplie
 It applies format-specific validation and untainting using appropriate L<Data::Validate> subclasses, including email, IP, URI and other.
 Also it checks values against enumerators and patterns, if provided.
 
-=head1 SUBROUTINES
+=cut
+
+# Global variable for reporter subroutine
+our $reporter;
 
 =method C<new>
 
