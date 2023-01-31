@@ -170,6 +170,12 @@ sub _validate_value
 
     my $format = $schema->{format} if $schema;
 
+    # If empty values are explicitly (dis)allowed, they are checked here.
+    if( $value eq '' && $schema && $schema->{allowEmptyValue} ) {
+        return $value if $schema->{allowEmptyValue} eq 'true';
+        return;
+    }
+
     # 'enum' is the strictest possible validation method.
     if( $schema && $schema->{enum} ) {
         return grep { $value eq $_ } @{$schema->{enum}};
@@ -185,13 +191,6 @@ sub _validate_value
     if( $format && exists $format_methods{$format} ) {
         return $format_methods{$format}->( $value );
     }
-
-    ## Not sure this is appropriate here
-    # if( defined $value && $value eq '' &&
-    #     ( !exists $description->{allowEmptyValue} ||
-    #       $description->{allowEmptyValue} eq 'false' ) ) {
-    #     return; # nothing to do
-    # }
 
     # Tainted values may still get till here and are returned as such.
     return $value;
