@@ -103,17 +103,17 @@ sub validate
 
 By default validation errors are silent, but there are two ways to handle validation errors: by setting validator-specific subroutine or by setting module variable:
 
-    my $reporter = sub { warn "value for '$_[0]' is incorrect" };
+    my $reporter_sub = sub { warn "value for '$_[0]' is incorrect" };
 
     # Set a reporter for this particular validator instance:
-    $validator->reporter( $reporter );
+    $validator->reporter( $reporter_sub );
 
     # Set a reporter for all instances of this class:
-    $Data::Validate::OpenAPI::reporter = $reporter;
+    $Data::Validate::OpenAPI::reporter = $reporter_sub;
 
 If any of them is set, reporter subroutine is called with the following parameters:
 
-    $reporter->( $parameter_name, @bad_values );
+    $reporter_sub->( $parameter_name, @bad_values );
 
 Validator-specific reporter takes precedence.
 At this point the module does not indicate which particular check failed during the validation.
@@ -122,6 +122,14 @@ At this point the module does not indicate which particular check failed during 
 
 # Global variable for reporter subroutine
 our $reporter;
+
+=head2 C<reporter> method
+
+Set reporter subroutine to be called for each parameter failing the validation:
+
+    $reporter_sub->( $parameter_name, @bad_values );
+
+=cut
 
 sub reporter
 {
