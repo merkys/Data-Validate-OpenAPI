@@ -86,14 +86,14 @@ sub validate
         if( $schema && $schema->{type} eq 'array' ) {
             my( @good_values, @bad_values );
             for (ref $par_hash->{$name} eq 'ARRAY' ? @{$par_hash->{$name}} : split "\0", $par_hash->{$name}) {
-                my $value = validate_value( $_, $schema );
+                my $value = _validate_value( $_, $schema );
                 push @good_values, $value if defined $value;
                 push @bad_values, $value unless defined $value;
             }
             $par->{$name} = \@good_values if @good_values;
             $reporter->( $name, @bad_values ) if $reporter && @bad_values;
         } else {
-            my $value = validate_value( $par_hash->{$name}, $schema );
+            my $value = _validate_value( $par_hash->{$name}, $schema );
             $par->{$name} = $value if defined $value;
             if( $reporter ) {
                 $reporter->( $name, $par_hash->{$name} );
@@ -115,7 +115,7 @@ At this point the module does not indicate which particular check failed during 
 
 =cut
 
-sub validate_value
+sub _validate_value
 {
     my( $value, $schema ) = @_;
 
