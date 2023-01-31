@@ -29,6 +29,8 @@ use Scalar::Util qw( blessed );
 C<Data::Validate::OpenAPI> validates and untaints CGI parameters using a supplied OpenAPI schema.
 It applies format-specific validation and untainting using appropriate L<Data::Validate> subclasses, including email, IP, URI and other.
 Also it checks values against enumerators and patterns, if provided.
+At this point values without supported formats, enumerators or patterns are returned as they are, tainted.
+This behavior may change in the future.
 
 =head1 METHODS
 
