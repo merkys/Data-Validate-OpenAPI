@@ -55,6 +55,7 @@ sub validate
     # FIXME: More specific parameters override less specific ones.
     # FIXME: Request body parameters should be taken from CGI object
     #        using their own specific methods.
+    # TODO: In future, parameters other than 'query' can be returned too.
     my $api = $self->{api};
     my @parameters =
         grep { $_->{in} eq 'query' }
