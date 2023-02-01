@@ -10,6 +10,7 @@ use OpenAPI::Render;
 use parent OpenAPI::Render::;
 
 use Data::Validate qw( is_integer );
+use Data::Validate::Domain qw( is_hostname );
 use Data::Validate::Email qw( is_email );
 use Data::Validate::IP qw( is_ipv4 is_ipv6 );
 use Data::Validate::URI qw( is_uri );
@@ -183,6 +184,7 @@ my %format_methods = (
     'date-time' => sub { my $parser = DateTime::Format::RFC3339->new;
                          return $parser->format_datetime( $parser->parse_datetime( $_[0] ) ) },
     email       => \&is_email,
+    hostname    => \&is_hostname,
     integer     => \&is_integer,
     ipv4        => \&is_ipv4,
     ipv6        => \&is_ipv6,
