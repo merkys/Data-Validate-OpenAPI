@@ -48,6 +48,7 @@ Takes a call path, HTTP method and a CGI object.
 Returns a hash of validated pairs of CGI parameter keys and their values.
 At this point values failing to validate are not reported.
 Keys for parameters having no valid values are omitted from the returned hash.
+Dies if any of defaultless required parameters is not seen in input.
 
 The interface for this method is bound to change, but backwards compatibility will be preserved on best effort basis.
 
@@ -72,8 +73,9 @@ sub validate
            ? OpenAPI::Render::RequestBody2Parameters( $api->{paths}{$path}{$method}{requestBody} ) : ();
 
     my $par = {};
-    my $par_hash = $input;
+    my @missing_required;
 
+    my $par_hash = $input;
     if( blessed $par_hash ) {
         $par_hash = { $par_hash->Vars }; # object is assumed to be CGI
     }
@@ -84,6 +86,8 @@ sub validate
         if( !exists $par_hash->{$name} ) {
             if( $schema && exists $schema->{default} ) {
                 $par->{$name} = $schema->{default};
+            } elsif( $description->{required} ) {
+                push @missing_required, $par->{$name};
             }
             next;
         }
@@ -102,6 +106,11 @@ sub validate
             $par->{$name} = $value if defined $value;
             $self->_report( $name, $value ) unless defined $value;
         }
+    }
+
+    if( @missing_required ) {
+        local $, = "', '";
+        die "required parameter(s) '@missing_required' are not provided\n";
     }
 
     return $par;
