@@ -97,14 +97,14 @@ sub validate
             for (ref $par_hash->{$name} eq 'ARRAY' ? @{$par_hash->{$name}} : split "\0", $par_hash->{$name}) {
                 my $value = _validate_value( $_, $schema );
                 push @good_values, $value if defined $value;
-                push @bad_values, $value unless defined $value;
+                push @bad_values, $_ unless defined $value;
             }
             $par->{$name} = \@good_values if @good_values;
             $self->_report( $name, @bad_values ) if @bad_values;
         } else {
             my $value = _validate_value( $par_hash->{$name}, $schema );
             $par->{$name} = $value if defined $value;
-            $self->_report( $name, $value ) unless defined $value;
+            $self->_report( $name, $par_hash->{$name} ) unless defined $value;
         }
     }
 
