@@ -202,4 +202,10 @@ sub _validate_value
     return $value;
 }
 
+=head1 SEE ALSO
+
+L<https://spec.openapis.org/oas/v3.0.2.html>
+
+=cut
+
 1;
