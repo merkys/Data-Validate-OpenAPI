@@ -49,6 +49,8 @@ Returns a hash of validated pairs of CGI parameter keys and their values.
 At this point values failing to validate are not reported.
 Keys for parameters having no valid values are omitted from the returned hash.
 
+The interface for this method is bound to change, but backwards compatibility will be preserved on best effort basis.
+
 =cut
 
 sub validate
