@@ -32,6 +32,9 @@ Also it checks values against enumerators and patterns, if provided.
 At this point values without supported formats, enumerators or patterns are returned as they are, tainted.
 This behavior may change in the future.
 
+C<Data::Validate::OpenAPI> does not validate OpenAPI schemas.
+To do so, refer to L<JSON::Validator>.
+
 =head1 METHODS
 
 =head2 C<new( $api )>
