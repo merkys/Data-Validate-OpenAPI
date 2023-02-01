@@ -34,12 +34,12 @@ This behavior may change in the future.
 
 =head1 METHODS
 
-=head2 C<new>
+=head2 C<new( $api )>
 
 Takes a parsed OpenAPI schema as returned by L<JSON> module's C<decode_json()>.
 Returns validator ready to validate CGI parameters.
 
-=head2 C<validate>
+=head2 C<validate( $path, $method, $cgi )>
 
 Takes a call path, HTTP method and a CGI object.
 Returns a hash of validated pairs of CGI parameter keys and their values.
@@ -126,7 +126,7 @@ At this point the module does not indicate which particular check failed during 
 # Global variable for reporter subroutine
 our $reporter;
 
-=head2 C<reporter> method
+=head2 C<reporter( $reporter_sub )> method
 
 Set reporter subroutine to be called for each parameter failing the validation:
 
