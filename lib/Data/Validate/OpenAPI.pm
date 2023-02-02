@@ -65,7 +65,7 @@ sub validate
     # TODO: In future, parameters other than 'query' can be returned too.
     my $api = $self->{api};
     my @parameters =
-        grep { $_->{in} eq 'query' }
+        grep { $_->{in} eq 'query' && !exists $_->{'x-is-pattern'} }
         exists $api->{paths}{$path}{parameters}
            ? @{$api->{paths}{$path}{parameters}} : (),
         exists $api->{paths}{$path}{$method}{parameters}
