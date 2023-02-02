@@ -65,7 +65,7 @@ sub validate
     # TODO: In future, parameters other than 'query' can be returned too.
     my $api = $self->{api};
     my @parameters =
-        grep { $_->{in} eq 'query' && !exists $_->{'x-is-pattern'} }
+        grep { $_->{in} eq 'query' }
         exists $api->{paths}{$path}{parameters}
            ? @{$api->{paths}{$path}{parameters}} : (),
         exists $api->{paths}{$path}{$method}{parameters}
@@ -73,25 +73,21 @@ sub validate
         exists $api->{paths}{$path}{$method}{requestBody}
            ? OpenAPI::Render::RequestBody2Parameters( $api->{paths}{$path}{$method}{requestBody} ) : ();
 
-    my $par = {};
-    my @missing_required;
+    my @pattern_parameters = grep { exists $_->{'x-is-pattern'} } @parameters;
+    @parameters = grep { !exists $_->{'x-is-pattern'} } @parameters;
 
     my $par_hash = $input;
     if( blessed $par_hash ) {
         $par_hash = { $par_hash->Vars }; # object is assumed to be CGI
     }
 
-    for my $description (@parameters) {
-        my $name = $description->{name};
+    # Process the given parameters
+    my $par = {};
+    for my $name (sort keys %$par_hash) {
+        my( $description ) = ( grep { $name eq $_->{name} } @parameters ),
+                             ( grep { $name =~ $_->{name} } @pattern_parameters );
+        next unless $description;
         my $schema = $description->{schema} if $description->{schema};
-        if( !exists $par_hash->{$name} ) {
-            if( $schema && exists $schema->{default} ) {
-                $par->{$name} = $schema->{default};
-            } elsif( $description->{required} ) {
-                push @missing_required, $par->{$name};
-            }
-            next;
-        }
 
         if( $schema && $schema->{type} eq 'array' ) {
             my( @good_values, @bad_values );
@@ -121,6 +117,16 @@ sub validate
                 }
             }
         }
+    }
+
+    # Check for missing required parameters
+    my @missing_required;
+    for my $description (@parameters) {
+        my $name = $description->{name};
+        next if exists $par_hash->{$name}; # parameter is not provided
+        next unless exists $description->{required}; # parameter is required
+        next if $description->{schema} && exists $description->{schema}{default}; # parameter does not have a default
+        push @missing_required, $name;
     }
 
     if( @missing_required ) {
